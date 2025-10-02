@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼图小游戏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            height: 100%;
+            margin: 0;
+        }
+        .container {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            background-color: #edf0f5;
+            justify-content: flex-end;
+            flex-direction: column-reverse;
+            padding-top: 50px;
+            box-sizing: border-box;
+        }
+        .container .main-container {
+            margin: 12px;
+            max-width: 100%;
+            height: 580px;
+            max-height: 100%;
+            border-radius: 8px;
+            padding: 12px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .image-container {
+            flex: 1;
+            display: grid;
+            overflow: hidden;
+        }
+        .container .main-container .image-container {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            display: grid;
+            grid-gap: 1px;
+        }
+        .container .main-container .setting-container {
+            height: 36px;
+            line-height: 60px;
+            width: 100%;
+            text-align: center;
+        }
+        .container .main-container .btn-container {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            right: auto;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transform: translateX(-50%);
+            transition: opacity .2s ease;
+            opacity: 0; /* 非悬停时隐藏 */
+        }
+        .container .main-container .btn-container:hover,
+        .container .main-container .btn-container:focus-within {
+            opacity: 1; /* 悬停或获得焦点时显示 */
+        }
+        .mask {
+            background-color: #ccc;
+            opacity: 0.7;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            height: 100%;
+        }
+        .tip-container {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1001;
+            width: 100%;
+            height: 100%;
+        }
+        .tip-container .tip-box {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .tip-container .tip-box .tip-background {
+            width: 340px;
+            min-height: 120px;
+            background:
+              linear-gradient(180deg, #ffffff, #fafafa);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 16px 18px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+            border: 1px solid #e9e9ef;
+        }
+        .tip-container .tip-box .tip-background .tip-title {
+            color: #f34545;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            margin-bottom: 6px;
+        }
+        .tip-container .tip-box .tip-background .tip-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .tip-container .tip-box .tip-background .btn-container {
+            padding: 12px 0 4px;
+            display: flex;
+            gap: 8px;
+        }
+        .tip-page {
+            display: none;
+        }
+        .btn {
+            height: 32px;
+            background-color: #ffffff;
+            border-radius: 6px;
+            color: #2486FF;
+            border: 1px solid #2486FF;
+        }
+        .btn:hover {
+            cursor: pointer;
+            color: #ffffff;
+            background-color: #5DA5FF;
+            border: 1px solid #5DA5FF;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            right: auto;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transform: translateX(-50%);
+            transition: opacity .2s ease;
+            opacity: 0; /* 非悬停时隐藏 */
+        }
+        .input-container:hover,
+        .input-container:focus-within {
+            opacity: 1; /* 悬停或获得焦点时显示 */
+        }
+        .input-container span {
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .input-container input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+        }
+        .input-container input[type="text"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+        .input-container button {
+            padding: 8px 12px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .input-container button:hover {
+            background-color: #0056b3;
+        }
+        .input-container button:focus {
+            outline: none;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 50px;
+            height: 100%;
+            background-color: #333;
+            color: #fff;
+            transition: width 0.3s;
+            overflow: hidden;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .sidebar.expanded {
+            width: 200px;
+        }
+        .sidebar-content {
+            padding: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.expanded .sidebar-content {
+            opacity: 1;
+        }
+        .sidebar-content {
+            opacity: 0;
+        }
+        .sidebar h4 {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            padding: 10px;
+            transform-origin: left center;
+            margin-top: 20px;
+            transition: font-size 0.3s;
+            text-align: center;
+        }
+        .sidebar.expanded h4 {
+            font-size: 20px;
+        }
+        .sidebar-content p {
+            margin: 2px 0;
+        }
+        .sidebar-content a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            display: block;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .sidebar-content a:hover {
+            background-color: #555;
+            color: #f0f0f0;
+        }
+        .tooltip {
+            position: absolute;
+            left: 60px;
+            top: 20px;
+            background-color: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 2000;
+        }
+        .tooltip.show {
+            opacity: 1;
+        }
+        .sidebar-footer {
+            color: #fff;
+            text-align: center;
+            font-size: 12px;
+            padding: 10px;
+            border-top: 1px solid #444;
+            margin-top: auto;
+            transition: opacity 0.3s;
+        }
+        .sidebar.expanded .sidebar-footer {
+            opacity: 1;
+        }
+        .sidebar-footer {
+            opacity: 0;
+        }
+
+        /* === Sidebar 优化 === */
+        .sidebar {
+            background: rgba(30, 30, 35, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            transition: width .28s ease, box-shadow .28s ease, background .28s ease, opacity .2s ease;
+            opacity: 0; /* 非悬停时隐藏（保持占位以便可悬停） */
+        }
+        .sidebar:hover,
+        .sidebar:focus-within {
+            opacity: 1; /* 悬停或获得焦点时显示 */
+        }
+        .sidebar.expanded {
+            width: 240px; /* 原为 200px，展开更舒适 */
+        }
+        .sidebar h4 {
+            letter-spacing: .5px;
+        }
+        .sidebar-content a {
+            border-radius: 6px;
+        }
+        .sidebar-content a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .tooltip {
+            background: rgba(30,30,35,0.92);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        /* === 难度下拉样式（yNumber/xNumber）=== */
+        .btn-container select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            height: 32px;
+            min-width: 64px;
+            padding: 0 34px 0 10px;
+            font-size: 14px;
+            color: #fff;
+            background:
+                linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02)) padding-box,
+                rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 6px;
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+            position: relative;
+        }
+        /* 自定义下拉箭头 */
+        .btn-container select {
+            background-image:
+              url("data:image/svg+xml;charset=UTF-8,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px 14px;
+        }
+        .btn-container select:hover {
+            border-color: rgba(255,255,255,0.45);
+        }
+        .btn-container select:focus {
+            border-color: #5DA5FF;
+            box-shadow: 0 0 0 3px rgba(93,165,255,0.35);
+        }
+        .btn-container option {
+            color: #111;
+            background: #fff;
+        }
+        /* 底部设置面板优化 */
+        .container .main-container .btn-container,
+        .input-container {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.09);
+        }
+        /* 响应式修复：窄屏时防止中文逐字换行，保持水平布局 */
+        .container .main-container .btn-container,
+        .input-container {
+            flex-wrap: nowrap;
+            max-width: calc(100vw - 32px);
+            overflow-x: auto;
+        }
+        .container .main-container .btn-container span,
+        .container .main-container .btn-container .btn,
+        .container .main-container .btn-container select,
+        .input-container span,
+        .input-container button {
+            white-space: nowrap;
+            word-break: keep-all; /* 防止中文逐字折行 */
+        }
+        .input-container input[type="text"] {
+            min-width: 160px;
+            flex: 1 1 auto;
+        }
+        /* 窄屏优化：btn-container 在小屏保持居中与不换行，减少尺寸避免挤压 */
+        @media (max-width: 480px) {
+            .container .main-container .btn-container {
+                max-width: calc(100vw - 24px);
+                padding: 8px 12px;
+                transform: translateX(-50%) scale(0.6);
+                transform-origin: center bottom;
+                white-space: nowrap;
+                overflow-x: auto;
+            }
+            .container .main-container .btn-container span {
+                font-size: 12px;
+                word-break: keep-all;
+            }
+            .container .main-container .btn-container select {
+                min-width: 52px;
+                height: 28px;
+                font-size: 12px;
+                padding: 0 28px 0 8px; /* 预留右侧箭头空间 */
+            }
+            .container .main-container .btn-container .btn {
+                height: 28px;
+                font-size: 12px;
+                padding: 6px 10px;
+                white-space: nowrap;
+            }
+        }
+        /* 完成提示弹出动画 */
+        @keyframes tipPopIn {
+            0% { transform: scale(0.85); opacity: 0; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+            60% { transform: scale(1.06); opacity: 1; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2)); }
+            100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.18)); }
+        }
+        .tip-container .tip-background {
+            animation: tipPopIn 450ms ease-out;
+            will-change: transform, opacity, filter;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="main-container">
+            <div class="image-container" id="canvasContainer"></div>
+            <div class="btn-container">
+                <span>难度选择：</span>
+                <select id="yNumber">
+                    <option value="3">3</option>
+                    <option value="4" selected>4</option>
+                    <option value="5">5</option>
+                </select>
+                <span>行</span>
+                <select id="xNumber">
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+                <span>列</span>
+                <button type="button" class="btn" id="startBtn">重新开始</button>
+            </div>
+                <div class="input-container">
+                    <span>图片 URL：</span>
+                    <input type="text" id="imageUrl" placeholder="输入图片 URL">
+                    <button type="button" id="loadImageBtn">加载图片</button>
+                </div>
+        </div>
+    </div>
+    <div class="mask tip-page"></div>
+    <div class="tip-container tip-page">
+        <div class="tip-box">
+            <div class="tip-background">
+                <div class="tip-title">提示</div>
+                <div class="tip-content">拼图完成^_^</div>
+                <div class="btn-container">
+                    <button type="button" class="btn" id="downloadImgBtn" title="下载完整原图">下载图片</button>
+                    <button type="button" class="btn" id="okBtn">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <h4>URL 链接</h4>
+        <div class="sidebar-content">
+            <p><a href="#" target="_blank" data-url="https://imgapi.cn/api.php">三次元</a></p>
+            <p><a href="#" target="_blank" data-url="https://imgapi.cn/cos.php">COSPLAY</a></p>
+            <p><a href="#" target="_blank" data-url="https://imgapi.cn/api.php?fl=dongman&gs=images">二次元</a></p>
+            <p><a href="#" target="_blank" data-url="https://www.dmoe.cc/random.php">樱花</a></p>
+            <p><a href="#" target="_blank" data-url="https://api.btstu.cn/sjbz/api.php">搏天三次元</a></p>
+            <p><a href="#" target="_blank" data-url="https://api.anosu.top/img">二次元</a></p>
+        </div>
+        <div class="sidebar-footer">
+            © 2025 出自 <a href="https://github.com/IIIStudio/JigsawGame" target="_blank" style="color: white; text-decoration: none;">puzzle-game</a>
+
+        </div>
+    </div>
+    <div class="tooltip" id="tooltip">链接已复制!</div>
+<script>
+let container = document.getElementById('canvasContainer');
+let yNumberElement = document.getElementById('yNumber');
+let xNumberElement = document.getElementById('xNumber');
+let tipPage = document.querySelectorAll('div.tip-page');
+let imageUrlInput = document.getElementById('imageUrl');
+let loadImageBtn = document.getElementById('loadImageBtn');
+let lastImageOriginUrl = ''; // 记录当前拼图所用的原始图片地址（不带时间戳）
+let lastImageLoadedUrl = ''; // 记录浏览器实际加载的最终图片地址（可能为跳转后的真实 URL）
+let lastImageBlobUrl = '';   // 缓存当前图片的 Blob 对象 URL，下载时优先使用
+// 尝试解析跳转后的最终图片 URL（若跨域不允许，可能失败）
+async function resolveFinalUrl(url) {
+    try {
+        const res = await fetch(url, { redirect: 'follow' });
+        if (res.ok) {
+            // 若有跳转，res.url 为最终地址；若无跳转则为原地址
+            return res.url || url;
+        }
+    } catch { /* 忽略错误，回退原地址 */ }
+    return url;
+}
+// 尝试抓取图片 Blob 并缓存对象 URL（可能受 CORS 限制）
+async function cacheImageBlob(url) {
+    try {
+        const res = await fetch(url, { redirect: 'follow' });
+        if (!res.ok) throw new Error('network');
+        const blob = await res.blob();
+        // 释放旧的对象 URL
+        if (lastImageBlobUrl) {
+            try { URL.revokeObjectURL(lastImageBlobUrl); } catch {}
+        }
+        lastImageBlobUrl = URL.createObjectURL(blob);
+    } catch {
+        // 保持 lastImageBlobUrl 不变，后续下载回退到 loaded/origin URL
+    }
+}
+
+let dragElement = null;
+let finished = false;
+
+init();
+
+document.getElementById('startBtn').addEventListener('click', function () {
+    init();
+});
+
+document.getElementById('okBtn').addEventListener('click', function () {
+    hidenTip();
+});
+const downloadBtnEl = document.getElementById('downloadImgBtn');
+if (downloadBtnEl) {
+    downloadBtnEl.addEventListener('click', function () {
+        // 下载优先级：Blob 对象 URL > 实际加载的最终地址 > 原始地址
+        const urlToOpen = lastImageBlobUrl || lastImageLoadedUrl || lastImageOriginUrl;
+        if (!urlToOpen) {
+            alert('当前没有可下载的图片');
+            return;
+        }
+        window.open(urlToOpen, '_blank');
+    });
+}
+
+loadImageBtn.addEventListener('click', function () {
+    init(); // 重新初始化游戏，使用新的图片 URL
+});
+
+
+function init() {
+    let xNumber = xNumberElement.options[xNumberElement.selectedIndex].value; // 列数
+    let yNumber = yNumberElement.options[yNumberElement.selectedIndex].value; // 行数
+    let itemList = [];
+    let order = 0;
+    let img = null;
+    let cellWidth, cellHeight, imageCellWidth, imageCellHeight;
+    container.innerHTML = ''; // 清空容器
+    finished = false;
+
+    getRotateImage().then((image) => {
+        img = image;
+        
+        // 固定容器高度为 580px
+        let fixedHeight = 580;
+        let imageWidth = img.width;
+        let imageHeight = img.height;
+
+        // 计算缩放后的宽度，根据图片的宽高比调整宽度
+        let scale = fixedHeight / imageHeight;
+        let scaledWidth = Math.floor(imageWidth * scale);
+
+        // 计算每个单元格的宽高（根据缩放后的尺寸）
+        cellWidth = Math.floor(scaledWidth / xNumber);
+        cellHeight = Math.floor(fixedHeight / yNumber);
+
+        // 更新容器的宽度和高度
+        container.style.width = `${scaledWidth}px`;
+        container.style.height = `${fixedHeight}px`;
+
+        // 计算图片在每个单元格中显示的部分尺寸
+        imageCellWidth = Math.floor(img.width / xNumber);
+        imageCellHeight = Math.floor(img.height / yNumber);
+
+        // 使用 grid 布局
+        container.style['grid-template-columns'] = `repeat(${xNumber}, ${cellWidth}px)`;
+        container.style['grid-template-rows'] = `repeat(${yNumber}, ${cellHeight}px)`;
+
+        for (let j = 0; j < yNumber; j++) {
+            itemList[j] = [];
+            for (let i = 0; i < xNumber; i++) {
+                initCube(i, j);
+            }
+        }
+        moveCube();
+    });
+
+    function initCube(i, j) {
+        let item = document.createElement('div');
+        item.className = 'item';
+        item.setAttribute('data-index', order);
+        item.draggable = 'true';
+        item.addEventListener('dragstart', onDragStart);
+        item.addEventListener('dragover', onDragOver);
+        item.addEventListener('drop', onDrop);
+        item.innerHTML = "<canvas class='' width='" + cellWidth + "' height='" + cellHeight + "'></canvas>";
+        itemList[j][i] = item;
+
+        let canvas = item.querySelector('canvas');
+        let ctx = canvas.getContext('2d');
+
+        // 将图片的指定区域绘制到 canvas 上
+        ctx.drawImage(
+            img,
+            i * imageCellWidth, j * imageCellHeight, // 图片的起点位置
+            imageCellWidth, imageCellHeight,        // 图片区域大小
+            0, 0,                                   // 画布的起点
+            cellWidth, cellHeight                   // 画布显示的大小
+        );
+        order++;
+    }
+
+    function moveCube() {
+        let randomChange = [-1, 1];
+        const changeCount = 5;
+        for (let j = 0; j < yNumber; j++) {
+            const maxIndex = xNumber - 1;
+            for (let m = 0; m < changeCount; m++) {
+                let sourceIndex = getRandomInt(xNumber);
+                let targetIndex = getTargetIndex(sourceIndex, maxIndex);
+                itemList[j][sourceIndex] = itemList[j].splice(targetIndex, 1, itemList[j][sourceIndex])[0];
+            }
+        }
+        for (let i = 0; i < xNumber; i++) {
+            const maxIndex = yNumber - 1;
+            for (let m = 0; m < changeCount; m++) {
+                let sourceIndex = getRandomInt(yNumber);
+                let targetIndex = getTargetIndex(sourceIndex, maxIndex);
+                itemList[sourceIndex][i] = itemList[targetIndex].splice(i, 1, itemList[sourceIndex][i])[0];
+            }
+        }
+        for (let j = 0; j < itemList.length; j++) {
+            for (let i = 0; i < itemList[j].length; i++) {
+                itemList[j][i].setAttribute('data-x', i);
+                itemList[j][i].setAttribute('data-y', j);
+                container.appendChild(itemList[j][i]);
+            }
+        }
+
+        function getTargetIndex(sourceIndex, maxIndex) {
+            return sourceIndex === 0 ? 1 : sourceIndex === maxIndex ? maxIndex - 1 : sourceIndex + randomChange[getRandomInt(randomChange.length)];
+        }
+    }
+}
+
+
+
+
+function loadImagesFromTxt(txtUrl) {
+    return fetch(txtUrl)
+        .then(response => response.text())
+        .then(text => {
+            // 假设 txt 文件中每一行都是一个图片链接
+            let imageUrls = text.split('\n').map(line => line.trim()).filter(line => line);
+            return imageUrls;
+        })
+        .catch(error => {
+            console.error("无法获取 txt 文件：", error);
+            return [];
+        });
+}
+
+let currentImageIndex = 0;  // 用于追踪当前显示的图片索引
+
+function getRotateImage() {
+    let image = new Image();
+    let inputUrl = imageUrlInput.value.trim();
+
+    if (inputUrl.startsWith("txt:")) {
+        // 处理 txt 文件链接
+        let txtUrl = inputUrl.replace("txt:", "");
+        return loadImagesFromTxt(txtUrl).then(imageUrls => {
+            if (imageUrls.length > 0) {
+                // 确保当前索引不超出范围
+                currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+                let imageUrl = imageUrls[currentImageIndex];
+                
+                // 记录原始地址，并添加时间戳以防缓存
+                lastImageOriginUrl = imageUrl;
+                let timestamp = new Date().getTime();
+                let urlWithTimestamp = `${imageUrl}?timestamp=${timestamp}`;
+                // 先尝试解析最终 URL（避免再次命中随机 API）
+                resolveFinalUrl(urlWithTimestamp).then(finalUrl => {
+                    image.src = finalUrl;
+                    // 并尝试缓存 Blob 对象 URL（若跨域允许）
+                    cacheImageBlob(finalUrl);
+                });
+                return new Promise((resolve, reject) => {
+                    image.onload = () => {
+                        // 记录最终地址；若解析失败则用 currentSrc/带时间戳的地址
+                        lastImageLoadedUrl = image.currentSrc || urlWithTimestamp;
+                        resolve(image);
+                    };
+                    image.onerror = reject;
+                });
+            } else {
+                return Promise.reject("在 txt 文件中未找到图像。");
+            }
+        });
+    } else {
+        // 如果不是 txt 文件，直接使用图片 URL
+        let imageUrl = inputUrl || './img/demo.jpg';
+        // 记录原始地址，并添加时间戳以防缓存
+        lastImageOriginUrl = imageUrl;
+        let timestamp = new Date().getTime();
+        let urlWithTimestamp = `${imageUrl}?timestamp=${timestamp}`;
+        // 先尝试解析最终 URL 并赋值，同时尝试缓存 Blob
+        resolveFinalUrl(urlWithTimestamp).then(finalUrl => {
+            image.src = finalUrl;
+            cacheImageBlob(finalUrl);
+        });
+        // 注意：最终地址在 onload 中通过 currentSrc 记录
+        return new Promise((resolve, reject) => {
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+        });
+    }
+}
+
+function loadImagesFromTxt(txtUrl) {
+    return fetch(txtUrl)
+        .then(response => response.text())
+        .then(text => {
+            // 假设 txt 文件中每一行都是一个图片链接
+            return text.split('\n').map(line => line.trim()).filter(line => line);
+        })
+        .catch(error => {
+            console.error("Failed to fetch txt file:", error);
+            return [];
+        });
+}
+
+
+
+
+
+function onDragStart(e) {
+    dragElement = e.currentTarget;
+}
+
+function onDragOver(e) {
+    if (!finished) {
+        e.preventDefault();
+    }
+}
+
+function onDrop(e) {
+    let dropElement = e.currentTarget;
+    if (dragElement != null && dragElement != dropElement) {
+        exchangeElement(dragElement, dropElement);
+        if (isFinish()) {
+            showTip();
+        }
+    }
+}
+
+function exchangeElement(firstElement, secondElement) {
+    // 交换数据
+    let tempX = firstElement.dataset.x;
+    let tempY = firstElement.dataset.y;
+    
+    firstElement.setAttribute('data-x', secondElement.dataset.x);
+    firstElement.setAttribute('data-y', secondElement.dataset.y);
+    
+    secondElement.setAttribute('data-x', tempX);
+    secondElement.setAttribute('data-y', tempY);
+    
+    // 交换位置
+    let temp = document.createElement('div');
+    container.replaceChild(temp, secondElement);
+    container.replaceChild(secondElement, firstElement);
+    container.replaceChild(firstElement, temp);
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+}
+
+function showTip() {
+    // 显示提示层
+    for (let i = 0; i < tipPage.length; i++) {
+        tipPage[i].style.display = 'block';
+    }
+    // 触发礼花动画
+    launchConfetti();
+}
+
+function hidenTip() {
+    for (let i = 0; i < tipPage.length; i++) {
+        tipPage[i].style.display = 'none';
+    }
+    // 清理礼花画布
+    const existing = document.getElementById('confettiCanvas');
+    if (existing && existing.parentNode) {
+        existing.parentNode.removeChild(existing);
+    }
+}
+
+function isFinish() {
+    for (let i = 0; i < container.childNodes.length; i++) {
+        if (container.childNodes[i].dataset.index != i) {
+            return false;
+        }
+    }
+    finished = true;
+    return true;
+}
+
+        const sidebar = document.getElementById('sidebar');
+        const tooltip = document.getElementById('tooltip');
+
+        // Toggle sidebar expansion on mouseover and mouseout
+        sidebar.addEventListener('mouseover', () => sidebar.classList.add('expanded'));
+        sidebar.addEventListener('mouseout', () => sidebar.classList.remove('expanded'));
+
+        // Handle copy link functionality
+        document.querySelectorAll('.sidebar-content a').forEach(link => {
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                const url = link.getAttribute('data-url');
+                
+                navigator.clipboard.writeText(url)
+                    .then(() => {
+                        tooltip.textContent = '链接已复制!';
+                        tooltip.classList.add('show');
+                        setTimeout(() => tooltip.classList.remove('show'), 2000);
+                    })
+                    .catch(err => console.error('Failed to copy:', err));
+            });
+        });
+
+        // 礼花动画：创建画布并发射粒子
+        function launchConfetti() {
+            // 如果已存在则先移除
+            const old = document.getElementById('confettiCanvas');
+            if (old && old.parentNode) old.parentNode.removeChild(old);
+
+            const canvas = document.createElement('canvas');
+            canvas.id = 'confettiCanvas';
+            canvas.style.position = 'fixed';
+            canvas.style.inset = '0';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.zIndex = '1002';
+            document.body.appendChild(canvas);
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            function resize() {
+                canvas.width = Math.floor(window.innerWidth * dpr);
+                canvas.height = Math.floor(window.innerHeight * dpr);
+            }
+            resize();
+            window.addEventListener('resize', resize, { once: true });
+
+            const colors = ['#ff5252','#ff9800','#ffd740','#69f0ae','#40c4ff','#7c4dff','#e040fb'];
+            const gravity = 0.08 * dpr;
+            const drag = 0.995;
+            const count = Math.min(180, Math.floor(window.innerWidth / 6));
+            const centerX = (canvas.width / 2);
+            const centerY = (canvas.height * 2 / 3); // 起点更靠下，使礼花向上喷出
+
+            const particles = [];
+            for (let i = 0; i < count; i++) {
+                const angle = -Math.PI + (Math.random() * Math.PI); // 上半圆（-π 到 0），向上方向
+                const speed = (Math.random() * 12 + 8) * dpr;
+                particles.push({
+                    x: centerX,
+                    y: centerY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 6 + 3,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * Math.PI * 2,
+                    vr: (Math.random() - 0.5) * 0.2
+                });
+            }
+
+            let start = null;
+            function tick(ts) {
+                if (!start) start = ts;
+                const elapsed = ts - start;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.vy += gravity;
+                    p.vx *= drag; p.vy *= drag;
+                    p.x += p.vx; p.y += p.vy;
+                    p.rotation += p.vr;
+
+                    // 绘制小矩形纸片
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size/2, -p.size/3, p.size, p.size * 0.66);
+                    ctx.restore();
+                });
+
+                // 1.6 秒后移除
+                if (elapsed < 1600) {
+                    requestAnimationFrame(tick);
+                } else {
+                    if (canvas && canvas.parentNode) {
+                        canvas.parentNode.removeChild(canvas);
+                    }
+                }
+            }
+            requestAnimationFrame(tick);
+        }
+</script>
+    </script>
+    
+        <style>
+        .corner-links {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            align-items: center;
+            z-index: 9999;
+        }
+        .corner-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            color: #212529;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .corner-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .corner-link img,
+        .corner-link svg {
+            width: 22px;
+            height: 22px;
+        }
+        .corner-link .label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+    </style>
+    <div class="corner-links" aria-label="页面固定链接">
+        <a class="corner-link" href="https://github.com/IIIStudio/JigsawGame" target="_blank" rel="noopener noreferrer" aria-label="前往 GitHub 仓库">
+            <!-- 内联 GitHub 图标，避免外部资源依赖 -->
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#24292F" d="M12 .5a12 12 0 0 0-3.79 23.41c.6.11.82-.26.82-.58v-2.02c-3.35.73-4.06-1.61-4.06-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.74.08-.74 1.2.09 1.83 1.23 1.83 1.23 1.07 1.83 2.8 1.3 3.49.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.51.12-3.15 0 0 1.01-.32 3.3 1.23.96-.27 1.99-.4 3.01-.4s2.05.14 3.01.4c2.29-1.55 3.3-1.23 3.3-1.23.66 1.64.25 2.85.12 3.15.77.84 1.24 1.91 1.24 3.22 0 4.61-2.8 5.63-5.47 5.93.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z"/>
+            </svg>
+            <span class="label">JigsawGame</span>
+        </a>
+        <a class="corner-link" href="https://cnb.cool/IIIStudio/HTML/JigsawGame/" target="_blank" rel="noopener noreferrer" aria-label="前往 JigsawGame 文档页面">
+            <img src="https://docs.cnb.cool/images/logo/svg/LogoColorfulIcon.svg" alt="CNB Logo">
+        </a>
+    </div>
+</html>
